@@ -1,0 +1,39 @@
+{
+
+  "manifest_version": 2,
+  "name": "Open selected links in tabs",
+  "version": "1.0.0",
+  "author": "André Veríssimo",
+  "default_locale": "en",
+
+  "applications": {
+    "gecko": {
+      "id": "open.selected.links.in.tabs@gmail.com",
+      "strict_min_version": "53.0a1"
+    }
+  },
+
+  "description": "Open selected links in tabs",
+
+  "icons": {
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+
+  "permissions": [
+    "contextMenus"
+  ],
+
+  "background": {
+    "scripts": ["background.js"]
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "all_frames": true,
+      "js": [ "content.js" ],
+      "run_at": "start"
+    }
+  ]
+}
