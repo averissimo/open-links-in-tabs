@@ -29,7 +29,12 @@ chrome.contextMenus.create( {
 // relative to the passed in <tab>
 //
 function openUrls( urllist, tab ) {
-
+  console.log('urllist', urllist);
+  console.log('tab', tab);
+  if (urllist === undefined) {
+    console.log('urllist is undefined!')
+    return;
+  }
   let tabId = tab.index;
   for ( url of urllist ) {
     chrome.tabs.create(
