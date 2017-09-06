@@ -1,5 +1,7 @@
 # Open Links in Tabs Firefox Extension
 
+Available at [addons.mozilla.org](https://addons.mozilla.org/en-US/firefox/addon/open_links_in_tabs/)
+
 Opens selected links in new tabs.
 
 That's just it.
