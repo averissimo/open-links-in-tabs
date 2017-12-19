@@ -1,5 +1,5 @@
 {
-  "name": "shorten-me",
+  "name": "open-links-in-tabs",
   "dependencies": {
     "coffee-script": "^1.12.6",
     "del": "^2.2.2",
