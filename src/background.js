@@ -41,6 +41,7 @@ function openUrls( urllist, tab ) {
       {
         windowId: tab.windowId,
         index: ++tabId,
+        openerTabId: tab.id,
         url: url,
         active: false
       }
