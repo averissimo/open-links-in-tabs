@@ -38,13 +38,14 @@ function openUrls( urllist, tab ) {
   let tabId = tab.index;
   let n = 100;
   for ( url of urllist ) {
+    let u = url;
     setTimeout(function () {
       chrome.tabs.create(
         {
           windowId: tab.windowId,
           index: ++tabId,
           openerTabId: tab.id,
-          url: url,
+          url: u,
           active: false
         }
       )
