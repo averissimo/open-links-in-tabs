@@ -15,12 +15,16 @@
 // Since a background script can't see page content we have to ask
 // the tab that was clicked to return it to us.
 //
-chrome.contextMenus.create( {
+browser.contextMenus.create( {
   id: "openselectedlinks",
   title: browser.i18n.getMessage("openLinks"),
   contexts: [ "selection" ],
   onclick: openselectedlinks
 } );
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 //
 // openUrls
@@ -28,29 +32,23 @@ chrome.contextMenus.create( {
 // Given an <urllist> array open each in a new background tab
 // relative to the passed in <tab>
 //
-function openUrls( urllist, tab ) {
+async function openUrls( urllist, tab ) {
   console.log('urllist', urllist);
   console.log('tab', tab);
   if (urllist === undefined) {
     console.log('urllist is undefined!')
     return;
   }
-  let tabId = tab.index;
-  let n = 100;
+  let ptab = tab;
   for ( url of urllist ) {
-    let u = url;
-    setTimeout(function () {
-      chrome.tabs.create(
-        {
-          windowId: tab.windowId,
-          index: ++tabId,
-          openerTabId: tab.id,
-          url: u,
-          active: false
-        }
-      )
-    }, n);
-	n += 900;
+    ptab = await browser.tabs.create({
+             windowId: tab.windowId,
+             index: (ptab.index + 1),
+             openerTabId: ptab.id,
+             url: url,
+             active: false
+           });
+	await sleep(600);
   }
 }
 
@@ -58,7 +56,7 @@ function openselectedlinks( info, tab ) {
   // prior to bug 1250631 tab was part of the info object
   if ( !tab ) { tab = info.tab; }
 
-  chrome.tabs.sendMessage(
+  browser.tabs.sendMessage(
     tab.id,
     "getSelectedLinks",
     (results) => { openUrls( results, tab ); }
