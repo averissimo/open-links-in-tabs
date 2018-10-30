@@ -36,16 +36,20 @@ function openUrls( urllist, tab ) {
     return;
   }
   let tabId = tab.index;
+  let n = 100;
   for ( url of urllist ) {
-    chrome.tabs.create(
-      {
-        windowId: tab.windowId,
-        index: ++tabId,
-        openerTabId: tab.id,
-        url: url,
-        active: false
-      }
-    )
+    setTimeout(function () {
+      chrome.tabs.create(
+        {
+          windowId: tab.windowId,
+          index: ++tabId,
+          openerTabId: tab.id,
+          url: url,
+          active: false
+        }
+      )
+    }, n);
+	n += 900;
   }
 }
 
