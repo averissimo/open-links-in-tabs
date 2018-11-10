@@ -1,6 +1,3 @@
-
-
-//
 // Open Selected Links web extension
 //
 // URL/Link helper extension, primarily for dealing with mass links.
@@ -18,47 +15,46 @@
 browser.contextMenus.create( {
   id: "openselectedlinks",
   title: browser.i18n.getMessage("openLinks"),
-  contexts: [ "selection" ],
+  contexts: [ "all" ],
   onclick: openselectedlinks
 } );
+
+async function openselectedlinks( info, tab ) {
+  // prior to bug 1250631 tab was part of the info object
+  if ( !tab ) { tab = info.tab; }
+  let morelinks = await browser.tabs.sendMessage(tab.id, "getSelectedLinks");
+  for (let link of morelinks) {
+	  queue.push(link);
+  }
+  openTabs(tab);
+}
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-//
-// openUrls
-//
-// Given an <urllist> array open each in a new background tab
-// relative to the passed in <tab>
-//
-async function openUrls( urllist, tab ) {
-  console.log('urllist', urllist);
-  console.log('tab', tab);
-  if (urllist === undefined) {
-    console.log('urllist is undefined!')
+let running = false;
+let queue = [];
+
+async function openTabs(firsttab) {
+  if (running) {
     return;
   }
-  let ptab = tab;
-  for ( url of urllist ) {
-    ptab = await browser.tabs.create({
-             windowId: tab.windowId,
-             index: (ptab.index + 1),
-             openerTabId: ptab.id,
-             url: url,
-             active: false
-           });
-	await sleep(600);
+  running = true;
+  let i = 0;
+  let lasttab = firsttab;
+  while (queue[i]) {
+    lasttab = await browser.tabs.create({
+      windowId: firsttab.windowId,
+      index: (lasttab.index + 1),
+      openerTabId: lasttab.id,
+      url: queue[i],
+      active: false
+    });
+    await sleep(1000);
+    i++;
   }
+  queue.length = 0;
+  running = false;
 }
 
-function openselectedlinks( info, tab ) {
-  // prior to bug 1250631 tab was part of the info object
-  if ( !tab ) { tab = info.tab; }
-
-  browser.tabs.sendMessage(
-    tab.id,
-    "getSelectedLinks",
-    (results) => { openUrls( results, tab ); }
-  )
-}
