@@ -29,6 +29,14 @@ async function openselectedlinks( info, tab ) {
   openTabs(tab);
 }
 
+let debugOn = true;
+
+function debug(...str) {
+	if (debugOn) {
+		console.log(...str);
+	}
+}
+
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -40,21 +48,37 @@ async function openTabs(firsttab) {
   if (running) {
     return;
   }
+  debug("started running",running,queue);
   running = true;
   let i = 0;
   let lasttab = firsttab;
   while (queue[i]) {
-    lasttab = await browser.tabs.create({
-      windowId: firsttab.windowId,
-      index: (lasttab.index + 1),
-      openerTabId: lasttab.id,
-      url: queue[i],
-      active: false
-    });
-    await sleep(1000);
+    try {
+      lasttab = await browser.tabs.create({
+        windowId: firsttab.windowId,
+        index: (lasttab.index + 1),
+        openerTabId: lasttab.id,
+        url: queue[i],
+        active: false
+      });
+	} catch(e) {
+      debug("RETRYING, because of", e);
+      try {
+        lasttab = await browser.tabs.create({
+          windowId: firsttab.windowId,
+          index: (lasttab.index + 1),
+          url: queue[i],
+          active: false
+        });
+  	  } catch(e) {
+         debug("ERROR DURING RETRY:", e);
+  	  }
+	}
+    await sleep(2000);
     i++;
   }
-  queue.length = 0;
+  queue = [];
   running = false;
+  debug("finished running",running,queue);
 }
 
