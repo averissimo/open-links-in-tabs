@@ -1,12 +1,8 @@
 //
 // OpenSelectedLinks content_script
 //
-// When a message is received it will gather all links found in
+// When a message is received it will gather all unique links found in
 // the selection and return their hrefs as an array.
-//
-// Repeated URLs are coalesced to avoid a common annoyance (particularly
-// in bugzilla queries). Duplicates that are not adjacent will still
-// result in duplicate tabs.
 //
 chrome.runtime.onMessage.addListener( gatherLinks );
 
@@ -26,8 +22,6 @@ function gatherLinks( message, sender, callback ) {
   //
   let results = [];
   // console.log('  results', results);
-  let prevLink = "";
-  // console.log('  prevLink', prevLink);
   let selection = window.getSelection();
   // console.log('  selection', selection);
 
@@ -40,9 +34,8 @@ function gatherLinks( message, sender, callback ) {
   // console.log('  ancestor', ancestor);
 
   for ( let link of ancestor.getElementsByTagName( "a" ) ) {
-    if ( selection.containsNode( link, true ) && link.href != prevLink ) {
+    if ( selection.containsNode( link, true ) && results.indexOf( link.href ) === -1 ) {
       results.push( link.href );
-      prevLink = link.href;
     }
   }
 
