@@ -1,6 +1,3 @@
-
-
-//
 // Open Selected Links web extension
 //
 // URL/Link helper extension, primarily for dealing with mass links.
@@ -15,47 +12,74 @@
 // Since a background script can't see page content we have to ask
 // the tab that was clicked to return it to us.
 //
-chrome.contextMenus.create( {
-  id: "openselectedlinks",
-  title: browser.i18n.getMessage("openLinks"),
-  contexts: [ "selection" ],
+browser.contextMenus.create({
+  id: 'openselectedlinks',
+  title: browser.i18n.getMessage('openLinks'),
+  contexts: ['selection'], // Why? all
   onclick: openselectedlinks
-} );
+});
 
-//
-// openUrls
-//
-// Given an <urllist> array open each in a new background tab
-// relative to the passed in <tab>
-//
-function openUrls( urllist, tab ) {
-  console.log('urllist', urllist);
-  console.log('tab', tab);
-  if (urllist === undefined) {
-    console.log('urllist is undefined!')
-    return;
+async function openselectedlinks(info, tab) {
+  // Prior to bug 1250631 tab was part of the info object
+  if (!tab) {
+    tab = info.tab;
   }
-  let tabId = tab.index;
-  for ( url of urllist ) {
-    chrome.tabs.create(
-      {
-        windowId: tab.windowId,
-        index: ++tabId,
-        openerTabId: tab.id,
-        url: url,
-        active: false
-      }
-    )
+  const morelinks = await browser.tabs.sendMessage(tab.id, 'getSelectedLinks');
+  for (const link of morelinks) {
+    queue.push(link);
+  }
+  openTabs(tab);
+}
+
+const debugOn = false;
+
+function debug(...str) {
+  if (debugOn) {
+    console.log(...str);
   }
 }
 
-function openselectedlinks( info, tab ) {
-  // prior to bug 1250631 tab was part of the info object
-  if ( !tab ) { tab = info.tab; }
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-  chrome.tabs.sendMessage(
-    tab.id,
-    "getSelectedLinks",
-    (results) => { openUrls( results, tab ); }
-  )
+let running = false;
+let queue = [];
+
+async function openTabs(firsttab) {
+  if (running) {
+    return;
+  }
+  debug('started running', running, queue);
+  running = true;
+  let i = 0;
+  let lasttab = firsttab;
+  while (queue[i]) {
+    try {
+      lasttab = await browser.tabs.create({ // eslint-disable-line no-await-in-loop
+        windowId: firsttab.windowId,
+        index: (lasttab.index + 1),
+        openerTabId: lasttab.id,
+        url: queue[i],
+        active: false
+      });
+    } catch (e) {
+      debug('RETRYING, because of', e);
+      try {
+        lasttab = await browser.tabs.create({ // eslint-disable-line no-await-in-loop
+          windowId: firsttab.windowId,
+          index: (lasttab.index + 1),
+          url: queue[i],
+          active: false
+        });
+      } catch (e) {
+        debug('ERROR DURING RETRY:', e);
+      }
+    }
+    await sleep(100); // eslint-disable-line no-await-in-loop
+    i++;
+  }
+  queue = [];
+  running = false;
+  debug('finished running', running, queue);
 }
