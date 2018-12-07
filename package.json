@@ -1,9 +1,21 @@
 {
   "name": "open-links-in-tabs",
-  "dependencies": {
+  "dev-dependencies": {
     "coffee-script": "^1.12.6",
     "del": "^2.2.2",
     "gulp": "^3.9.1",
-    "gulp-zip": "^4.0.0"
+    "gulp-zip": "^4.0.0",
+    "xo": "^0.23.0",
+    "eslint-config-xo": "^0.25.1"
+  },
+  "scripts": {
+    "test": "xo"
+  },
+  "xo": {
+    "space": true,
+    "envs": ["browser", "webextensions"]
+  },
+  "jshintConfig": {
+    "esversion": 6
   }
 }

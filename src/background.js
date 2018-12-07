@@ -12,30 +12,31 @@
 // Since a background script can't see page content we have to ask
 // the tab that was clicked to return it to us.
 //
-browser.contextMenus.create( {
-  id: "openselectedlinks",
-  title: browser.i18n.getMessage("openLinks"),
-  contexts: [ "selection" ],
-  // contexts: [ "all" ],
+browser.contextMenus.create({
+  id: 'openselectedlinks',
+  title: browser.i18n.getMessage('openLinks'),
+  contexts: ['selection'], // Why? all
   onclick: openselectedlinks
-} );
+});
 
-async function openselectedlinks( info, tab ) {
-  // prior to bug 1250631 tab was part of the info object
-  if ( !tab ) { tab = info.tab; }
-  let morelinks = await browser.tabs.sendMessage(tab.id, "getSelectedLinks");
-  for (let link of morelinks) {
-	  queue.push(link);
+async function openselectedlinks(info, tab) {
+  // Prior to bug 1250631 tab was part of the info object
+  if (!tab) {
+    tab = info.tab;
+  }
+  const morelinks = await browser.tabs.sendMessage(tab.id, 'getSelectedLinks');
+  for (const link of morelinks) {
+    queue.push(link);
   }
   openTabs(tab);
 }
 
-let debugOn = true;
+const debugOn = false;
 
 function debug(...str) {
-	if (debugOn) {
-		console.log(...str);
-	}
+  if (debugOn) {
+    console.log(...str);
+  }
 }
 
 function sleep(ms) {
@@ -49,36 +50,36 @@ async function openTabs(firsttab) {
   if (running) {
     return;
   }
-  debug("started running",running,queue);
+  debug('started running', running, queue);
   running = true;
   let i = 0;
   let lasttab = firsttab;
   while (queue[i]) {
     try {
-      lasttab = await browser.tabs.create({
+      lasttab = await browser.tabs.create({ // eslint-disable-line no-await-in-loop
         windowId: firsttab.windowId,
         index: (lasttab.index + 1),
         openerTabId: lasttab.id,
         url: queue[i],
         active: false
       });
-	} catch(e) {
-      debug("RETRYING, because of", e);
+    } catch (e) {
+      debug('RETRYING, because of', e);
       try {
-        lasttab = await browser.tabs.create({
+        lasttab = await browser.tabs.create({ // eslint-disable-line no-await-in-loop
           windowId: firsttab.windowId,
           index: (lasttab.index + 1),
           url: queue[i],
           active: false
         });
-  	  } catch(e) {
-         debug("ERROR DURING RETRY:", e);
-  	  }
-	}
-    await sleep(100);
+      } catch (e) {
+        debug('ERROR DURING RETRY:', e);
+      }
+    }
+    await sleep(100); // eslint-disable-line no-await-in-loop
     i++;
   }
   queue = [];
   running = false;
-  debug("finished running",running,queue);
+  debug('finished running', running, queue);
 }
