@@ -13,7 +13,10 @@
   },
   "xo": {
     "space": true,
-    "envs": ["browser", "webextensions"]
+    "envs": [
+      "browser",
+      "webextensions"
+    ]
   },
   "jshintConfig": {
     "esversion": 6
