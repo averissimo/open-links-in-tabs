@@ -1,48 +1,35 @@
 //
 // OpenSelectedLinks content_script
 //
-// When a message is received it will gather all unique links found in
+// When a message is received it will gather all links found in
 // the selection and return their hrefs as an array.
+//
+// Repeated URLs are coalesced to avoid a common annoyance (particularly
+// in bugzilla queries).
 //
 chrome.runtime.onMessage.addListener( gatherLinks );
 
 function gatherLinks( message, sender, callback ) {
-  console.log("gatherLinks in document " + document.location)
-  //
-  // sanity-check whoever is poking us
-  //
   if ( message != "getSelectedLinks" )
-    throw "openlinks content script received unexpected message: " + message;
-  console.log("  message", message)
+    throw new Error("openlinks content script received unexpected message: " + message);
 
-  //
-  // To find all selected links we'll get all <a> elements found in the
-  // commonAncestorContainer of the selection, and then filter those
-  // to find the ones that are at least partially within the selection.
-  //
-  let results = [];
-  // console.log('  results', results);
+  let result = [];
   let selection = window.getSelection();
-  // console.log('  selection', selection);
-
   if (selection === null ) {
-    // console.log('  selection is null');
     return;
   }
 
   let ancestor = selection.getRangeAt(0).commonAncestorContainer;
-  // console.log('  ancestor', ancestor);
 
-  for ( let link of ancestor.getElementsByTagName( "a" ) ) {
-    if ( selection.containsNode( link, true ) && results.indexOf( link.href ) === -1 ) {
-      results.push( link.href );
+  // To find all selected links we'll get all <a> elements found in the
+  // commonAncestorContainer of the selection, and then filter those
+  // to find the ones that are at least partially within the selection.
+  ancestor.querySelectorAll("a").forEach(function(e) {
+    if (!selection.containsNode(e, true) || e.href === "" || result.indexOf(e.href) !== -1) {
+      return; // need only links from selection, with duplicates filtered out
     }
-  }
+    result.push(e.href);
+  });
 
-  if (results.length > 0) {
-    // console.log('  showing results', results);
-    callback( results );
-  } else {
-    // console.log('  doing nothing, as there are no results')
-  }
+  callback(result);
 }
