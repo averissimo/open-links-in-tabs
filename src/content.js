@@ -1,7 +1,7 @@
 //
 // OpenSelectedLinks content_script
 //
-// When a message is received it will gather all links found in
+// When a message is received it will gather all unique links found in
 // the selection and return their hrefs as an array.
 //
 // Repeated URLs are coalesced to avoid a common annoyance (particularly
