@@ -1,6 +1,8 @@
 {
   "name": "open-links-in-tabs",
-  "dev-dependencies": {
+  "repository": "https://github.com/averissimo/open-links-in-tabs",
+  "license": "GPLv3",
+  "devDependencies": {
     "coffee-script": "^1.12.6",
     "del": "^2.2.2",
     "gulp": "^3.9.1",
@@ -9,7 +11,8 @@
     "eslint-config-xo": "^0.25.1"
   },
   "scripts": {
-    "test": "xo"
+    "test": "xo",
+    "package": "gulp"
   },
   "xo": {
     "space": true,
