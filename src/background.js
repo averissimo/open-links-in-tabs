@@ -50,6 +50,7 @@ async function openTabs(firsttab) {
   if (running) {
     return;
   }
+  const options = await browser.storage.sync.get('interval');
   debug('started running', running, queue);
   running = true;
   let i = 0;
@@ -76,7 +77,7 @@ async function openTabs(firsttab) {
         debug('ERROR DURING RETRY:', e);
       }
     }
-    await sleep(100); // eslint-disable-line no-await-in-loop
+    await sleep(Number.parseFloat(options.interval || 100)); // eslint-disable-line no-await-in-loop
     i++;
   }
   queue = [];

@@ -2,7 +2,7 @@
 
   "manifest_version": 2,
   "name": "Open Links in Tabs",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "author": "André Veríssimo",
   "default_locale": "en",
 
@@ -21,7 +21,8 @@
   },
 
   "permissions": [
-    "contextMenus"
+    "contextMenus",
+    "storage"
   ],
 
   "background": {
@@ -35,5 +36,10 @@
       "js": [ "src/content.js" ],
       "run_at": "document_start"
     }
-  ]
+  ],
+
+  "options_ui": {
+    "page": "options.html",
+    "browser_style": true
+  }
 }

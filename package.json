@@ -3,12 +3,11 @@
   "repository": "https://github.com/averissimo/open-links-in-tabs",
   "license": "GPLv3",
   "devDependencies": {
-    "coffee-script": "^1.12.6",
     "del": "^2.2.2",
-    "gulp": "^3.9.1",
+    "eslint-config-xo": "^0.25.1",
+    "gulp": "^4.0.2",
     "gulp-zip": "^4.0.0",
-    "xo": "^0.23.0",
-    "eslint-config-xo": "^0.25.1"
+    "xo": "^0.23.0"
   },
   "scripts": {
     "test": "xo",
