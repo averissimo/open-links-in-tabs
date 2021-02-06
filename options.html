@@ -1,16 +1,47 @@
 <!DOCTYPE html>
 
 <html>
-  <head>
-    <meta charset="utf-8"/>
-  </head>
+<head>
+<meta charset="utf-8"/>
 
-  <body>
-    <form>
-      <label>Minimum interval between opening pages (milliseconds)</label>
-      <input type="number" id="interval"/>
-      <button type="submit">Save</button>
-    </form>
-    <script src="src/options.js"></script>
-  </body>
+<style>
+
+/* https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/user_interface/Browser_styles */
+
+.panel-formElements-item {
+  flex-direction: column;
+  align-items: start;
+}
+
+.panel-formElements-item label {
+  margin-bottom: 6px;
+}
+
+</style>
+</head>
+
+<body>
+  <form>
+    <div class="panel-section panel-section-formElements">
+      <div class="panel-formElements-item">
+        <label for="maxLoading">Maximum concurrently loading tabs (0 for no limit)</label>
+        <input id="maxLoading" type="number" min="0" />
+      </div>
+      <div class="panel-formElements-item">
+        <label for="interval">Interval between opening tabs (milliseconds)</label>
+        <input id="interval" type="number" min="1" />
+      </div>
+      <div class="panel-formElements-item">
+        <label for="loadTimeout">Tab loading timeout (seconds)</label>
+        <input id="loadTimeout" type="number" min="1" />
+      </div>
+      <div class="panel-formElements-item">
+        <button type="submit" class="browser-style default">Save</button>
+      </div>
+    </div>
+  </form>
+  <script src="src/defaults.js"></script>
+  <script src="src/options.js"></script>
+</body>
+
 </html>

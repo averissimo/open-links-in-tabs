@@ -1,21 +1,23 @@
-function saveOptions(e) {
-  browser.storage.sync.set({
-    interval: document.querySelector("#interval").value
-  });
+/* global DEFAULTS */
+
+async function saveOptions(e) {
   e.preventDefault();
+
+  const options = {};
+  Object.keys(DEFAULTS).forEach(key => {
+    options[key] = document.querySelector(`#${key}`).value;
+  });
+
+  await browser.storage.sync.set(options);
 }
 
-function restoreOptions() {
-  var storageItem = browser.storage.managed.get('interval');
-  storageItem.then((res) => {
-    document.querySelector("#managed-interval").innerText = res.interval;
-  });
+async function restoreOptions() {
+  const options = await browser.storage.sync.get(DEFAULTS);
 
-  var gettingItem = browser.storage.sync.get('interval');
-  gettingItem.then((res) => {
-    document.querySelector("#interval").value = res.interval || 100;
+  Object.keys(DEFAULTS).forEach(key => {
+    document.querySelector(`#${key}`).value = options[key];
   });
 }
 
 document.addEventListener('DOMContentLoaded', restoreOptions);
-document.querySelector("form").addEventListener("submit", saveOptions);
+document.querySelector('form').addEventListener('submit', saveOptions);
