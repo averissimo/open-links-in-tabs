@@ -26,7 +26,10 @@
   ],
 
   "background": {
-    "scripts": ["src/background.js"]
+    "scripts": [
+      "src/defaults.js",
+      "src/background.js"
+    ]
   },
 
   "content_scripts": [

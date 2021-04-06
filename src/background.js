@@ -1,3 +1,5 @@
+/* global DEFAULTS */
+
 // Open Selected Links web extension
 //
 // URL/Link helper extension, primarily for dealing with mass links.
@@ -24,11 +26,9 @@ async function openselectedlinks(info, tab) {
   if (!tab) {
     tab = info.tab;
   }
-  const morelinks = await browser.tabs.sendMessage(tab.id, 'getSelectedLinks');
-  for (const link of morelinks) {
-    queue.push(link);
-  }
-  openTabs(tab);
+  const links = await browser.tabs.sendMessage(tab.id, 'getSelectedLinks');
+  queue.push({tab, links});
+  openTabs();
 }
 
 const debugOn = false;
@@ -44,43 +44,110 @@ function sleep(ms) {
 }
 
 let running = false;
-let queue = [];
+let loading = 0;
+const queue = [];
 
-async function openTabs(firsttab) {
+async function openTabs() {
   if (running) {
     return;
   }
-  const options = await browser.storage.sync.get('interval');
-  debug('started running', running, queue);
-  running = true;
-  let i = 0;
-  let lasttab = firsttab;
-  while (queue[i]) {
-    try {
-      lasttab = await browser.tabs.create({ // eslint-disable-line no-await-in-loop
-        windowId: firsttab.windowId,
-        index: (lasttab.index + 1),
-        openerTabId: lasttab.id,
-        url: queue[i],
-        active: false
-      });
-    } catch (e) {
-      debug('RETRYING, because of', e);
-      try {
-        lasttab = await browser.tabs.create({ // eslint-disable-line no-await-in-loop
-          windowId: firsttab.windowId,
-          index: (lasttab.index + 1),
-          url: queue[i],
-          active: false
+
+  try {
+    running = true;
+    loading = 0;
+
+    const options = await getOptions();
+    debug('started running', running, queue);
+    debug('options', options);
+
+    while (queue.length) {
+      let {tab: lastTab, links} = queue.shift();
+
+      while (links.length) {
+        const link = links.shift();
+        const newTab = await openTab(link, lastTab); // eslint-disable-line no-await-in-loop
+        if (!newTab) {
+          continue;
+        }
+
+        lastTab = newTab;
+        loading++;
+        waitTab(lastTab, options.loadTimeout).then(() => {
+          loading = Math.max(loading - 1, 0);
         });
-      } catch (e) {
-        debug('ERROR DURING RETRY:', e);
+
+        do {
+          await sleep(options.interval); // eslint-disable-line no-await-in-loop
+        } while (options.maxLoading && (loading >= options.maxLoading)); // eslint-disable-line no-unmodified-loop-condition
       }
     }
-    await sleep(Number.parseFloat(options.interval || 100)); // eslint-disable-line no-await-in-loop
-    i++;
+  } finally {
+    queue.length = 0;
+    running = false;
+    debug('finished running', running, queue);
   }
-  queue = [];
-  running = false;
-  debug('finished running', running, queue);
+}
+
+async function getOptions() {
+  try {
+    const options = await browser.storage.sync.get(DEFAULTS);
+    Object.keys(options).forEach(key => {
+      options[key] = parseInt(options[key], 10);
+    });
+    return options;
+  } catch (error) {
+    return DEFAULTS;
+  }
+}
+
+async function openTab(url, lastTab) {
+  try {
+    lastTab = (await getTab(lastTab.id)) || lastTab;
+
+    return await browser.tabs.create({
+      windowId: lastTab.windowId,
+      index: (lastTab.index + 1),
+      url,
+      active: false
+    });
+  } catch (error) {
+    debug('failed to open tab', url, error);
+    return null;
+  }
+}
+
+async function getTab(tabId) {
+  try {
+    return await browser.tabs.get(tabId);
+  } catch (error) {
+    return null;
+  }
+}
+
+async function waitTab(tab, loadTimeout) {
+  return new Promise(resolve => {
+    function cleanResolve(reason) {
+      debug('wait finished', reason);
+      browser.tabs.onUpdated.removeListener(updateListener);
+      browser.tabs.onRemoved.removeListener(removeListener);
+      clearTimeout(timeoutId);
+      resolve();
+    }
+
+    function updateListener(tabId, changeInfo) {
+      if (changeInfo.status === 'complete') {
+        cleanResolve('completed');
+      }
+    }
+
+    function removeListener(tabId) {
+      if (tabId === tab.id) {
+        cleanResolve('removed');
+      }
+    }
+
+    browser.tabs.onUpdated.addListener(updateListener, {tabId: tab.id, properties: ['status']});
+    browser.tabs.onRemoved.addListener(removeListener);
+    const timeoutId = setTimeout(() => cleanResolve('timeout'), loadTimeout * 1000);
+  });
 }
