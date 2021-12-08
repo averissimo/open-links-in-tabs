@@ -20,17 +20,18 @@ function gatherLinks(message, sender, callback) {
     return;
   }
 
-  const ancestor = selection.getRangeAt(0).commonAncestorContainer;
+  if (selection.type === "Range" && selection.rangeCount > 0) {
+    const ancestor = selection.getRangeAt(0).commonAncestorContainer;
 
-  // To find all selected links we'll get all <a> elements found in the
-  // commonAncestorContainer of the selection, and then filter those
-  // to find the ones that are at least partially within the selection.
-  ancestor.querySelectorAll('a').forEach(e => {
-    if (!selection.containsNode(e, true) || e.href === '' || result.indexOf(e.href) !== -1) {
-      return; // Need only links from selection, with duplicates filtered out
-    }
-    result.push(e.href);
-  });
-
-  callback(result);
+    // To find all selected links we'll get all <a> elements found in the
+    // commonAncestorContainer of the selection, and then filter those
+    // to find the ones that are at least partially within the selection.
+    ancestor.querySelectorAll('a').forEach(e => {
+      if (!selection.containsNode(e, true) || e.href === '' || result.indexOf(e.href) !== -1) {
+        return; // Need only links from selection, with duplicates filtered out
+      }
+      result.push(e.href);
+    });
+    callback(result);
+  }
 }
