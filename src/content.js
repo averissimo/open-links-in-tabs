@@ -14,7 +14,7 @@ function gatherLinks(message, sender, callback) {
     throw new Error(`openlinks content script received unexpected message: ${message}`);
   }
 
-  const result = [];
+  const result = new Set();
   const selection = window.getSelection();
   if (selection === null) {
     return;
@@ -27,11 +27,11 @@ function gatherLinks(message, sender, callback) {
     // commonAncestorContainer of the selection, and then filter those
     // to find the ones that are at least partially within the selection.
     ancestor.querySelectorAll('a').forEach(e => {
-      if (!selection.containsNode(e, true) || e.href === '' || result.indexOf(e.href) !== -1) {
+      if (!selection.containsNode(e, true) || e.href === '' || result.has(e.href)) {
         return; // Need only links from selection, with duplicates filtered out
       }
-      result.push(e.href);
+      result.add(e.href);
     });
-    callback(result);
+    callback(Array.from(result));
   }
 }
