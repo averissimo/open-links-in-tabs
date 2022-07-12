@@ -17,28 +17,46 @@
 
 contextMenuId = "openselectedlinks";
 
-function createMenu() {
+async function shouldBeVisible() {
+  const options = await getOptions();
+  if (options.removeContextMenu) {
+    return false;
+  }
+  return true;
+}
+
+async function createMenu() {
   browser.contextMenus.create({
     id: contextMenuId,
     title: browser.i18n.getMessage('openLinks'),
     contexts: ['selection'], // Why? all
-    onclick: openselectedlinks
+    onclick: openselectedlinks,
+    visible: await shouldBeVisible()
   });
 }
 
 createMenu();
+
+browser.contextMenus.onHidden.addListener(async (info, tab) => {
+  browser.contextMenus.update(contextMenuId, {
+    enabled: true,
+    visible: await shouldBeVisible()
+  });
+});
 
 browser.contextMenus.onShown.addListener(async (info, tab) => {
   const links = await browser.tabs.sendMessage(tab.id, 'getSelectedLinks');
   
   if (!links || links.length == 0) {
     browser.contextMenus.update(contextMenuId, {
-      enabled: false
+      enabled: false,
+      visible: await shouldBeVisible()
     });
 
   } else {
     browser.contextMenus.update(contextMenuId, {
-      enabled: true
+      enabled: true,
+      visible: true
     });
   }
 
@@ -113,10 +131,18 @@ async function openTabs() {
 }
 
 async function getOptions() {
+  const parseBool = (value, defaultValue) => ['true', 'false', true, false].includes(value) && JSON.parse(value) || defaultValue
+
   try {
     const options = await browser.storage.sync.get(DEFAULTS);
     Object.keys(options).forEach(key => {
-      options[key] = parseInt(options[key], 10);
+      switch (key) {
+        case "removeContextMenu":
+          options[key] = parseBool(options[key], DEFAULTS.removeContextMenu);
+          break;
+        default:
+          options[key] = parseInt(options[key], 10);
+      }
     });
     return options;
   } catch (error) {

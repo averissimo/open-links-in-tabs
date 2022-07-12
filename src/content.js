@@ -20,10 +20,14 @@ function gatherLinks(message, sender, callback) {
     return;
   }
 
-  if (selection.type === "Range" ) {
+  if (selection.type === "Range") {
     // loop through all the ranges, so firefox's column select also works
     for(let ri=0;ri<selection.rangeCount;ri++){
       const ancestor = selection.getRangeAt(ri).commonAncestorContainer;
+
+      if (ancestor.nodeName == "#text") {
+        continue;
+      }
 
       // To find all selected links we'll get all <a> elements found in the
       // commonAncestorContainer of the selection, and then filter those

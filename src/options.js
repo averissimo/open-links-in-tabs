@@ -5,7 +5,14 @@ async function saveOptions(e) {
 
   const options = {};
   Object.keys(DEFAULTS).forEach(key => {
-    options[key] = document.querySelector(`#${key}`).value;
+    const selector = document.querySelector(`#${key}`);
+    switch (selector.type) {
+      case "checkbox": 
+        options[key] = selector.checked; 
+        break;
+      default:
+        options[key] = selector.value; 
+    }
   });
 
   await browser.storage.sync.set(options);
@@ -15,7 +22,14 @@ async function restoreOptions() {
   const options = await browser.storage.sync.get(DEFAULTS);
 
   Object.keys(DEFAULTS).forEach(key => {
-    document.querySelector(`#${key}`).value = options[key];
+    const selector = document.querySelector(`#${key}`)
+    switch (selector.type) {
+      case "checkbox": 
+        selector.checked = options[key];
+        break;
+      default:
+        selector.value = options[key];
+    }
   });
 }
 
