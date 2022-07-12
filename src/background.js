@@ -14,11 +14,35 @@
 // Since a background script can't see page content we have to ask
 // the tab that was clicked to return it to us.
 //
-browser.contextMenus.create({
-  id: 'openselectedlinks',
-  title: browser.i18n.getMessage('openLinks'),
-  contexts: ['selection'], // Why? all
-  onclick: openselectedlinks
+
+contextMenuId = "openselectedlinks";
+
+function createMenu() {
+  browser.contextMenus.create({
+    id: contextMenuId,
+    title: browser.i18n.getMessage('openLinks'),
+    contexts: ['selection'], // Why? all
+    onclick: openselectedlinks
+  });
+}
+
+createMenu();
+
+browser.contextMenus.onShown.addListener(async (info, tab) => {
+  const links = await browser.tabs.sendMessage(tab.id, 'getSelectedLinks');
+  
+  if (!links || links.length == 0) {
+    browser.contextMenus.update(contextMenuId, {
+      enabled: false
+    });
+
+  } else {
+    browser.contextMenus.update(contextMenuId, {
+      enabled: true
+    });
+  }
+
+  browser.contextMenus.refresh();
 });
 
 async function openselectedlinks(info, tab) {
