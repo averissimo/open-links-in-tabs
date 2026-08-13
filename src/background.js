@@ -29,7 +29,7 @@ async function createMenu() {
   browser.contextMenus.create({
     id: contextMenuId,
     title: browser.i18n.getMessage('openLinks'),
-    contexts: ['selection'], // Why? all
+    contexts: ['selection', 'page'],
     onclick: openselectedlinks,
     visible: await shouldBeVisible()
   });
@@ -46,7 +46,7 @@ browser.contextMenus.onHidden.addListener(async (info, tab) => {
 
 browser.contextMenus.onShown.addListener(async (info, tab) => {
   const links = await browser.tabs.sendMessage(tab.id, 'getSelectedLinks');
-  
+
   if (!links || links.length == 0) {
     browser.contextMenus.update(contextMenuId, {
       enabled: false,
